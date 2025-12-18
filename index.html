@@ -2,25 +2,911 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Black Screen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Astra Mini App</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      background: #000;
+    :root{
+      --bg: #0b0c0f;
+      --panel: rgba(255,255,255,.06);
+      --panel2: rgba(255,255,255,.08);
+      --border: rgba(255,255,255,.10);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.65);
+      --muted2: rgba(255,255,255,.45);
+      --accent: #2ea6ff;
+      --accentText: #ffffff;
+      --danger: #ff4d4f;
+
+      --r16: 16px;
+      --r20: 20px;
+      --pad: 14px;
+      --gap: 12px;
+      --shadow: 0 18px 50px rgba(0,0,0,.35);
+    }
+
+    [data-theme="light"]{
+      --bg: #f6f7fb;
+      --panel: rgba(0,0,0,.05);
+      --panel2: rgba(0,0,0,.06);
+      --border: rgba(0,0,0,.10);
+      --text: rgba(0,0,0,.88);
+      --muted: rgba(0,0,0,.60);
+      --muted2: rgba(0,0,0,.45);
+      --accent: #2ea6ff;
+      --accentText: #ffffff;
+      --shadow: 0 18px 50px rgba(0,0,0,.10);
+    }
+
+    html, body{ margin:0; padding:0; height:100%; background:var(--bg); color:var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    .app{
+      min-height: 100vh;
+      padding:
+        calc(env(safe-area-inset-top) + var(--pad))
+        calc(env(safe-area-inset-right) + var(--pad))
+        calc(env(safe-area-inset-bottom) + 74px + var(--pad)) /* место под нижнее меню */
+        calc(env(safe-area-inset-left) + var(--pad));
+      box-sizing: border-box;
+      display:flex;
+      flex-direction:column;
+      gap: var(--gap);
+    }
+
+    /* ===== TOP BAR ===== */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
+      gap:10px;
+    }
+
+    .balance-chip{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 10px 12px;
+      box-shadow: var(--shadow);
+      cursor:pointer;
+      user-select:none;
+    }
+
+    .balance-chip:active{ transform: translateY(1px); }
+
+    .chip-title{
+      font-size: 12px;
+      color: var(--muted2);
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+    .chip-value{
+      font-weight: 850;
+      letter-spacing:.2px;
+      line-height: 1;
+      font-size: 14px;
+    }
+
+    .chip-col{
+      display:flex;
+      flex-direction:column;
+      gap:3px;
+    }
+
+    .stars-icon{
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      object-fit: contain;
+      opacity: .95;
+    }
+
+    /* ===== PAGES ===== */
+    .page{
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--r20);
+      padding: 14px;
+      box-shadow: var(--shadow);
+      min-height: 52vh;
+    }
+
+    .center{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      min-height: 42vh;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing:.2px;
+    }
+
+    /* ===== PROFILE ===== */
+    .profile{
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+      align-items:stretch;
+    }
+
+    .avatar-wrap{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+      padding-top: 6px;
+    }
+
+    .avatar{
+      width: 92px;
+      height: 92px;
+      border-radius: 999px;
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 900;
+      font-size: 28px;
+      box-shadow: var(--shadow);
+    }
+    .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+    .pid{
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .uname{
+      font-weight: 900;
+      font-size: 16px;
+    }
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .card{
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: var(--r16);
+      padding: 12px;
+    }
+
+    .card .label{ color: var(--muted2); font-size: 12px; margin-bottom: 6px; }
+    .card .big{ font-weight: 900; font-size: 16px; }
+
+    .field{
+      display:flex;
+      gap:10px;
+    }
+
+    input{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      color: var(--text);
+      outline: none;
+    }
+
+    .btn{
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 0;
+      cursor:pointer;
+      font-weight: 900;
+      background: var(--panel2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn.primary{ background: var(--accent); color: var(--accentText); border-color: transparent; }
+    .btn.danger{ background: rgba(255,77,79,.16); color: var(--danger); border-color: rgba(255,77,79,.35); }
+
+    /* ===== SETTINGS ===== */
+    .settings{
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .row .left{
+      display:flex;
+      flex-direction:column;
+      gap: 3px;
+    }
+    .row .ttl{ font-weight: 900; }
+    .row .sub{ font-size: 12px; color: var(--muted); }
+
+    .seg{
+      display:flex;
+      gap: 8px;
+    }
+
+    /* ===== BOTTOM NAV ===== */
+    .bottom-nav{
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding:
+        10px
+        calc(env(safe-area-inset-right) + 14px)
+        calc(env(safe-area-inset-bottom) + 10px)
+        calc(env(safe-area-inset-left) + 14px);
+      box-sizing: border-box;
+      background: linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,0));
+      pointer-events:none;
+    }
+
+    [data-theme="light"] .bottom-nav{
+      background: linear-gradient(to top, rgba(255,255,255,.9), rgba(255,255,255,0));
+    }
+
+    .nav-inner{
+      pointer-events:auto;
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 10px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-btn{
+      border:0;
+      background: transparent;
+      color: var(--muted);
+      padding: 10px 8px;
+      border-radius: 14px;
+      cursor:pointer;
+      font-weight: 900;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap: 4px;
+      user-select:none;
+    }
+    .nav-btn.active{
+      background: var(--panel2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .nav-ico{ font-size: 18px; line-height: 1; }
+    .nav-txt{ font-size: 12px; line-height: 1; }
+
+    /* ===== MODAL / SHEET ===== */
+    .overlay{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:flex-end;
+      justify-content:center;
+      padding:
+        14px
+        calc(env(safe-area-inset-right) + 14px)
+        calc(env(safe-area-inset-bottom) + 14px)
+        calc(env(safe-area-inset-left) + 14px);
+      box-sizing: border-box;
+      z-index: 9999;
+    }
+    .overlay.show{ display:flex; }
+
+    .sheet{
+      width: min(520px, 100%);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .sheet-head{
+      padding: 14px 14px 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+    }
+    .sheet-title{
+      font-weight: 950;
+      letter-spacing:.2px;
+    }
+    .sheet-close{
+      background: transparent;
+      border: 0;
+      color: var(--muted);
+      font-size: 18px;
+      cursor:pointer;
+      padding: 6px 10px;
+      border-radius: 10px;
+    }
+
+    .sheet-body{
+      padding: 14px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+
+    .sheet-item{
+      width:100%;
+      text-align:left;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      color: var(--text);
+      cursor:pointer;
+      font-weight: 850;
+    }
+
+    /* simple dialog */
+    .dialog{
+      width: min(420px, 100%);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      align-self:center;
+    }
+    .dialog-body{ padding: 18px 16px; color: var(--text); font-weight: 850; text-align:center; }
+    .dialog-foot{
+      padding: 12px;
+      border-top: 1px solid var(--border);
+      background: var(--panel);
+    }
+    .dialog-foot .btn{ width:100%; }
+
+    .hint{
+      color: var(--muted2);
+      font-size: 12px;
+      line-height: 1.35;
     }
   </style>
 </head>
+
 <body>
+  <div class="app" id="app" data-theme="dark">
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <!-- Crypto balance -->
+      <div class="balance-chip" id="chipCrypto" title="Баланс">
+        <div class="chip-col">
+          <div class="chip-title" id="lblCrypto">Balance</div>
+          <div class="chip-value"><span id="valCrypto">0</span></div>
+        </div>
+      </div>
+
+      <!-- Stars balance -->
+      <div class="balance-chip" id="chipStars" title="Telegram Stars">
+        <img class="stars-icon" id="starsIcon" alt="stars" />
+        <div class="chip-col">
+          <div class="chip-title" id="lblStars">Telegram Stars</div>
+          <div class="chip-value"><span id="valStars">0</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE -->
+    <div class="page" id="page"></div>
+  </div>
+
+  <!-- Overlay (sheet / dialog) -->
+  <div class="overlay" id="overlay" aria-hidden="true"></div>
+
+  <!-- Bottom nav -->
+  <div class="bottom-nav">
+    <div class="nav-inner">
+      <button class="nav-btn active" id="navHome">
+        <div class="nav-ico">🏠</div>
+        <div class="nav-txt" id="navHomeTxt">Основное</div>
+      </button>
+      <button class="nav-btn" id="navProfile">
+        <div class="nav-ico">👤</div>
+        <div class="nav-txt" id="navProfileTxt">Профиль</div>
+      </button>
+      <button class="nav-btn" id="navSettings">
+        <div class="nav-ico">⚙️</div>
+        <div class="nav-txt" id="navSettingsTxt">Настройки</div>
+      </button>
+    </div>
+  </div>
+
   <script>
-    // чтобы Telegram понял, что страница готова
-    Telegram.WebApp.ready();
-    // попытаться развернуть на весь экран (если можно)
-    Telegram.WebApp.expand();
+    // ====== НАСТРОЙКИ (ВАЖНО) ======
+    // 1) ИКОНКА Telegram Stars: положи файл рядом с index.html и укажи путь:
+    //    пример: "stars.png" или "assets/stars.svg"
+    const STARS_ICON_PATH = "stars.png";
+
+    // 2) OWNER: тут можно указать Player ID владельца (чтобы видел админ-панель)
+    //    Сейчас: первый запуск — создастся Player ID, ты его увидишь в профиле и сюда вставишь.
+    const OWNER_PLAYER_ID = null; // например "123456"
+    // =================================
+
+    const tg = window.Telegram?.WebApp;
+
+    const LS = {
+      lang: "mini_lang",
+      theme: "mini_theme",
+      playerId: "mini_player_id",
+      user: "mini_user_data"
+    };
+
+    const TEXT = {
+      ru: {
+        balance: "Баланс",
+        stars: "Telegram Stars",
+        soon: "Soon..",
+        ok: "ОК",
+        home: "Основное",
+        profile: "Профиль",
+        settings: "Настройки",
+        coming: "Скоро..",
+        yourId: "Ваш Player ID",
+        username: "Юзернейм",
+        refs: "Рефералы",
+        refCount: "Приглашено",
+        refIncome: "Доход от рефералов",
+        promo: "Промокод",
+        promoPh: "Ввести промокод",
+        apply: "Применить",
+        languages: "Язык",
+        theme: "Тема",
+        dark: "Тёмная",
+        light: "Светлая",
+        admin: "Админ-панель",
+        adminHint: "Управление пользователями (муляж).",
+        searchId: "Player ID пользователя",
+        find: "Найти",
+        giveMod: "Выдать модератора",
+        ban: "Забанить",
+        addBal: "Начислить баланс",
+        subBal: "Списать баланс",
+        resetRefs: "Сбросить рефералы",
+        noteOwner: "Админ-меню видно только владельцу."
+      },
+      en: {
+        balance: "Balance",
+        stars: "Telegram Stars",
+        soon: "Soon..",
+        ok: "OK",
+        home: "Home",
+        profile: "Profile",
+        settings: "Settings",
+        coming: "Coming soon..",
+        yourId: "Your Player ID",
+        username: "Username",
+        refs: "Referrals",
+        refCount: "Invited",
+        refIncome: "Referral income",
+        promo: "Promo code",
+        promoPh: "Enter promo code",
+        apply: "Apply",
+        languages: "Language",
+        theme: "Theme",
+        dark: "Dark",
+        light: "Light",
+        admin: "Admin panel",
+        adminHint: "User management (mock).",
+        searchId: "User Player ID",
+        find: "Find",
+        giveMod: "Grant moderator",
+        ban: "Ban",
+        addBal: "Add balance",
+        subBal: "Subtract balance",
+        resetRefs: "Reset referrals",
+        noteOwner: "Admin menu is visible only to owner."
+      }
+    };
+
+    const state = {
+      tab: "home",
+      lang: localStorage.getItem(LS.lang) || "ru",
+      theme: localStorage.getItem(LS.theme) || "dark",
+      cryptoBalance: 0,
+      starsBalance: 0,
+      playerId: localStorage.getItem(LS.playerId) || null,
+      user: null,
+      isOwner: false,
+    };
+
+    const elApp = document.getElementById("app");
+    const elPage = document.getElementById("page");
+    const overlay = document.getElementById("overlay");
+
+    function T(key){ return (TEXT[state.lang] || TEXT.ru)[key] || key; }
+
+    function haptic(type="light"){
+      try { tg?.HapticFeedback?.impactOccurred?.(type); } catch(e){}
+    }
+
+    function setTheme(theme){
+      state.theme = theme === "light" ? "light" : "dark";
+      localStorage.setItem(LS.theme, state.theme);
+      elApp.setAttribute("data-theme", state.theme);
+
+      // подтянем цвета в Telegram (если доступно)
+      try {
+        if (tg) {
+          tg.setHeaderColor("secondary_bg_color");
+          tg.setBackgroundColor(tg.themeParams?.bg_color || (state.theme === "light" ? "#f6f7fb" : "#0b0c0f"));
+        }
+      } catch(e){}
+    }
+
+    function ensurePlayerId(){
+      if (state.playerId) return state.playerId;
+      // 6 цифр, сохраняем навсегда (муляж)
+      const id = String(Math.floor(100000 + Math.random() * 900000));
+      state.playerId = id;
+      localStorage.setItem(LS.playerId, id);
+      return id;
+    }
+
+    function loadUserFromTG(){
+      const tgUser = tg?.initDataUnsafe?.user || null;
+      const username = tgUser?.username ? `@${tgUser.username}` : (tgUser?.first_name || "Player");
+      const photoUrl = tgUser?.photo_url || null;
+
+      state.user = {
+        tg_id: tgUser?.id || null,
+        username,
+        photo_url: photoUrl,
+      };
+      localStorage.setItem(LS.user, JSON.stringify(state.user));
+    }
+
+    function loadUserFromLS(){
+      try {
+        const raw = localStorage.getItem(LS.user);
+        if (raw) state.user = JSON.parse(raw);
+      } catch(e){}
+      if (!state.user) state.user = { tg_id:null, username:"Player", photo_url:null };
+    }
+
+    function setLang(lang){
+      state.lang = (lang === "en") ? "en" : "ru";
+      localStorage.setItem(LS.lang, state.lang);
+      renderAll();
+    }
+
+    function showSheet(title, items){
+      overlay.innerHTML = `
+        <div class="sheet" role="dialog" aria-modal="true">
+          <div class="sheet-head">
+            <div class="sheet-title">${title}</div>
+            <button class="sheet-close" id="sheetClose">✕</button>
+          </div>
+          <div class="sheet-body">
+            ${items.map((it, i)=>`<button class="sheet-item" data-idx="${i}">${it.label}</button>`).join("")}
+          </div>
+        </div>
+      `;
+      overlay.classList.add("show");
+      overlay.onclick = (e)=>{ if (e.target === overlay) closeOverlay(); };
+      document.getElementById("sheetClose").onclick = closeOverlay;
+
+      [...overlay.querySelectorAll(".sheet-item")].forEach(btn=>{
+        btn.onclick = ()=>{
+          const idx = Number(btn.getAttribute("data-idx"));
+          const item = items[idx];
+          closeOverlay();
+          item.onClick?.();
+        };
+      });
+    }
+
+    function showDialog(message){
+      overlay.innerHTML = `
+        <div class="dialog" role="dialog" aria-modal="true">
+          <div class="dialog-body">${message}</div>
+          <div class="dialog-foot">
+            <button class="btn primary" id="dlgOk">${T("ok")}</button>
+          </div>
+        </div>
+      `;
+      overlay.classList.add("show");
+      overlay.onclick = (e)=>{ if (e.target === overlay) closeOverlay(); };
+      document.getElementById("dlgOk").onclick = closeOverlay;
+    }
+
+    function closeOverlay(){
+      overlay.classList.remove("show");
+      overlay.innerHTML = "";
+      overlay.onclick = null;
+    }
+
+    function setActiveNav(){
+      const map = { home:"navHome", profile:"navProfile", settings:"navSettings" };
+      ["navHome","navProfile","navSettings"].forEach(id=>{
+        document.getElementById(id).classList.toggle("active", id === map[state.tab]);
+      });
+    }
+
+    function renderTop(){
+      document.getElementById("lblCrypto").textContent = T("balance");
+      document.getElementById("lblStars").textContent = T("stars");
+      document.getElementById("valCrypto").textContent = String(state.cryptoBalance);
+      document.getElementById("valStars").textContent = String(state.starsBalance);
+
+      const icon = document.getElementById("starsIcon");
+      icon.src = STARS_ICON_PATH; // <- твоя иконка здесь
+    }
+
+    function renderHome(){
+      elPage.innerHTML = `<div class="center">${T("coming")}</div>`;
+    }
+
+    function renderProfile(){
+      const pid = ensurePlayerId();
+      const username = state.user?.username || "Player";
+
+      const firstLetter = (username.replace("@","").trim()[0] || "P").toUpperCase();
+      const avatarHtml = state.user?.photo_url
+        ? `<img src="${state.user.photo_url}" alt="avatar" />`
+        : `<div>${firstLetter}</div>`;
+
+      elPage.innerHTML = `
+        <div class="profile">
+          <div class="avatar-wrap">
+            <div class="avatar">${avatarHtml}</div>
+            <div class="pid">${T("yourId")}: <b>${pid}</b></div>
+            <div class="uname">${T("username")}: <b>${username}</b></div>
+          </div>
+
+          <div class="grid2">
+            <div class="card">
+              <div class="label">${T("refCount")}</div>
+              <div class="big">0</div>
+            </div>
+            <div class="card">
+              <div class="label">${T("refIncome")}</div>
+              <div class="big">0</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="label">${T("promo")}</div>
+            <div class="field">
+              <input id="promoInput" placeholder="${T("promoPh")}" />
+              <button class="btn primary" id="promoApply">${T("apply")}</button>
+            </div>
+            <div class="hint" style="margin-top:8px;">
+              (Пока муляж — позже сделаем начисление баланса по промокоду.)
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById("promoApply").onclick = ()=>{
+        haptic("light");
+        showDialog(T("soon"));
+      };
+    }
+
+    function renderSettings(){
+      const pid = ensurePlayerId();
+
+      state.isOwner = (OWNER_PLAYER_ID && String(pid) === String(OWNER_PLAYER_ID));
+
+      elPage.innerHTML = `
+        <div class="settings">
+          <div class="card">
+            <div class="row">
+              <div class="left">
+                <div class="ttl">${T("languages")}</div>
+                <div class="sub">RU / EN</div>
+              </div>
+              <div class="seg">
+                <button class="btn ${state.lang==="ru"?"primary":""}" id="langRu">🇷🇺 RU</button>
+                <button class="btn ${state.lang==="en"?"primary":""}" id="langEn">🇬🇧 EN</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="row">
+              <div class="left">
+                <div class="ttl">${T("theme")}</div>
+                <div class="sub">${state.theme==="dark" ? T("dark") : T("light")}</div>
+              </div>
+              <div class="seg">
+                <button class="btn ${state.theme==="dark"?"primary":""}" id="themeDark">🌙</button>
+                <button class="btn ${state.theme==="light"?"primary":""}" id="themeLight">☀️</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="row">
+              <div class="left">
+                <div class="ttl">${T("admin")}</div>
+                <div class="sub">${T("adminHint")}</div>
+              </div>
+              <button class="btn ${state.isOwner ? "primary" : ""}" id="openAdmin">
+                ${state.isOwner ? "Open" : "Locked"}
+              </button>
+            </div>
+            <div class="hint" style="margin-top:8px;">${T("noteOwner")}</div>
+          </div>
+
+          <div class="hint">
+            Идеи для админки (потом сделаем): мут/таймаут, выдача роли, просмотр логов,
+            рассылка, сброс прогресса, управление промокодами, лимиты на вывод.
+          </div>
+        </div>
+      `;
+
+      document.getElementById("langRu").onclick = ()=>{ haptic(); setLang("ru"); };
+      document.getElementById("langEn").onclick = ()=>{ haptic(); setLang("en"); };
+      document.getElementById("themeDark").onclick = ()=>{ haptic(); setTheme("dark"); renderAll(); };
+      document.getElementById("themeLight").onclick = ()=>{ haptic(); setTheme("light"); renderAll(); };
+
+      document.getElementById("openAdmin").onclick = ()=>{
+        haptic("medium");
+        if (!state.isOwner){
+          showDialog(T("soon"));
+          return;
+        }
+        openAdminSheet();
+      };
+    }
+
+    function openAdminSheet(){
+      showSheet(T("admin"), [
+        { label: "🔎 " + T("find"), onClick: openAdminUserLookup },
+        { label: "📢 Broadcast (soon)", onClick: ()=>showDialog(T("soon")) },
+        { label: "🎟 Promo manager (soon)", onClick: ()=>showDialog(T("soon")) },
+      ]);
+    }
+
+    function openAdminUserLookup(){
+      overlay.innerHTML = `
+        <div class="sheet" role="dialog" aria-modal="true">
+          <div class="sheet-head">
+            <div class="sheet-title">${T("admin")}</div>
+            <button class="sheet-close" id="sheetClose">✕</button>
+          </div>
+          <div class="sheet-body">
+            <div class="hint">${T("searchId")}</div>
+            <div class="field">
+              <input id="adminPid" placeholder="123456" inputmode="numeric" />
+              <button class="btn primary" id="adminFind">${T("find")}</button>
+            </div>
+            <div id="adminResult" style="margin-top:10px;"></div>
+          </div>
+        </div>
+      `;
+      overlay.classList.add("show");
+      overlay.onclick = (e)=>{ if (e.target === overlay) closeOverlay(); };
+      document.getElementById("sheetClose").onclick = closeOverlay;
+
+      document.getElementById("adminFind").onclick = ()=>{
+        const pid = (document.getElementById("adminPid").value || "").trim();
+        if (!/^\d{6}$/.test(pid)) {
+          showDialog("Введите 6 цифр");
+          return;
+        }
+
+        // Муляж карточки пользователя (потом заменим на реальные данные с сервера)
+        const html = `
+          <div class="card">
+            <div class="label">User</div>
+            <div class="big">Player ID: ${pid}</div>
+            <div class="hint">Ник/аватар/баланс — позже подтянем из базы.</div>
+            <div style="height:10px"></div>
+            <div class="grid2">
+              <button class="btn" id="giveMod">${T("giveMod")}</button>
+              <button class="btn danger" id="ban">${T("ban")}</button>
+            </div>
+            <div style="height:10px"></div>
+            <div class="grid2">
+              <button class="btn" id="addBal">${T("addBal")}</button>
+              <button class="btn" id="subBal">${T("subBal")}</button>
+            </div>
+            <div style="height:10px"></div>
+            <button class="btn" id="resetRefs">${T("resetRefs")}</button>
+          </div>
+        `;
+        document.getElementById("adminResult").innerHTML = html;
+
+        document.getElementById("giveMod").onclick = ()=>showDialog(T("soon"));
+        document.getElementById("ban").onclick = ()=>showDialog(T("soon"));
+        document.getElementById("addBal").onclick = ()=>showDialog(T("soon"));
+        document.getElementById("subBal").onclick = ()=>showDialog(T("soon"));
+        document.getElementById("resetRefs").onclick = ()=>showDialog(T("soon"));
+      };
+    }
+
+    function renderPage(){
+      if (state.tab === "home") renderHome();
+      if (state.tab === "profile") renderProfile();
+      if (state.tab === "settings") renderSettings();
+      setActiveNav();
+    }
+
+    function renderNavText(){
+      document.getElementById("navHomeTxt").textContent = T("home");
+      document.getElementById("navProfileTxt").textContent = T("profile");
+      document.getElementById("navSettingsTxt").textContent = T("settings");
+    }
+
+    function renderAll(){
+      setTheme(state.theme);
+      renderTop();
+      renderNavText();
+      renderPage();
+    }
+
+    // ====== EVENTS ======
+    document.getElementById("navHome").onclick = ()=>{ haptic(); state.tab="home"; renderPage(); };
+    document.getElementById("navProfile").onclick = ()=>{ haptic(); state.tab="profile"; renderPage(); };
+    document.getElementById("navSettings").onclick = ()=>{ haptic(); state.tab="settings"; renderPage(); };
+
+    document.getElementById("chipCrypto").onclick = ()=>{
+      haptic("light");
+      showSheet(T("balance"), [
+        { label: "➕ Привязать крипто-кошелёк", onClick: ()=>showDialog(T("soon")) },
+        { label: "📤 Перевести по адресу", onClick: ()=>showDialog(T("soon")) },
+        { label: "📥 Пополнить", onClick: ()=>showDialog(T("soon")) },
+      ]);
+    };
+
+    document.getElementById("chipStars").onclick = ()=>{
+      haptic("light");
+      showSheet(T("stars"), [
+        { label: "➕ Buy Stars", onClick: ()=>showDialog(T("soon")) },
+        { label: "📥 Add Stars", onClick: ()=>showDialog(T("soon")) },
+      ]);
+    };
+
+    // ====== INIT ======
+    (function init(){
+      // если открыто в Telegram — используем tg api
+      if (tg) {
+        tg.ready();
+        tg.expand();
+        try { tg.setHeaderColor("secondary_bg_color"); } catch(e){}
+        loadUserFromTG();
+      } else {
+        loadUserFromLS();
+      }
+
+      ensurePlayerId();
+
+      // если язык в TG en — по умолчанию EN (если ещё не выбран)
+      if (!localStorage.getItem(LS.lang) && state.user?.tg_id && tg?.initDataUnsafe?.user?.language_code?.startsWith("en")) {
+        state.lang = "en";
+        localStorage.setItem(LS.lang, "en");
+      }
+
+      renderAll();
+    })();
   </script>
 </body>
 </html>
