@@ -441,11 +441,13 @@
     // ====== НАСТРОЙКИ (ВАЖНО) ======
     // 1) ИКОНКА Telegram Stars: положи файл рядом с index.html и укажи путь:
     //    пример: "stars.png" или "assets/stars.svg"
-    const STARS_ICON_PATH = "stars.png";
+    const STARS_ICON_PATH = "star.png";
 
     // 2) OWNER: тут можно указать Player ID владельца (чтобы видел админ-панель)
     //    Сейчас: первый запуск — создастся Player ID, ты его увидишь в профиле и сюда вставишь.
-    const OWNER_PLAYER_ID = null; // например "123456"
+    const OWNER_PLAYER_ID = null; // оставим, но больше не используем
+const OWNER_TG_ID = 6482018325; // владелец по Telegram ID
+
     // =================================
 
     const tg = window.Telegram?.WebApp;
@@ -712,7 +714,8 @@
     function renderSettings(){
       const pid = ensurePlayerId();
 
-      state.isOwner = (OWNER_PLAYER_ID && String(pid) === String(OWNER_PLAYER_ID));
+   state.isOwner = (state.user?.tg_id && Number(state.user.tg_id) === Number(OWNER_TG_ID));
+
 
       elPage.innerHTML = `
         <div class="settings">
@@ -910,3 +913,4 @@
   </script>
 </body>
 </html>
+
