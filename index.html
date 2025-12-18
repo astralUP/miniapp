@@ -3,914 +3,1612 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Astra Mini App</title>
+  <title>Astra</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
     :root{
-      --bg: #0b0c0f;
-      --panel: rgba(255,255,255,.06);
-      --panel2: rgba(255,255,255,.08);
-      --border: rgba(255,255,255,.10);
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.65);
-      --muted2: rgba(255,255,255,.45);
-      --accent: #2ea6ff;
-      --accentText: #ffffff;
-      --danger: #ff4d4f;
+      /* speed */
+      --t0: 120ms;
+      --t1: 160ms;
+      --t2: 220ms;
 
+      /* radii */
+      --r12: 12px;
       --r16: 16px;
       --r20: 20px;
-      --pad: 14px;
-      --gap: 12px;
-      --shadow: 0 18px 50px rgba(0,0,0,.35);
+      --r24: 24px;
+
+      /* dark */
+      --bg0:#070912;
+      --bg1:#0b0f1b;
+      --text:#eaf0ff;
+      --muted:#a9b6d4;
+      --muted2:#7b86a3;
+
+      --glass: rgba(255,255,255,.06);
+      --glass2: rgba(255,255,255,.09);
+      --border: rgba(255,255,255,.10);
+      --border2: rgba(0,0,0,.28);
+
+      --accent:#3aa8ff;
+      --accent2:#7b5cff;
+      --danger:#ff4d4f;
+
+      --shadow: 0 18px 55px rgba(0,0,0,.55);
+      --shadow2: 0 10px 25px rgba(0,0,0,.35);
+
+      --pad: 16px;
+      --navH: 60px; /* чуть меньше/ниже */
     }
 
     [data-theme="light"]{
-      --bg: #f6f7fb;
-      --panel: rgba(0,0,0,.05);
-      --panel2: rgba(0,0,0,.06);
+      --bg0:#f6f8ff;
+      --bg1:#eef2ff;
+      --text:#0b1020;
+      --muted:#3b4760;
+      --muted2:#596781;
+
+      --glass: rgba(0,0,0,.05);
+      --glass2: rgba(0,0,0,.07);
       --border: rgba(0,0,0,.10);
-      --text: rgba(0,0,0,.88);
-      --muted: rgba(0,0,0,.60);
-      --muted2: rgba(0,0,0,.45);
-      --accent: #2ea6ff;
-      --accentText: #ffffff;
-      --shadow: 0 18px 50px rgba(0,0,0,.10);
+      --border2: rgba(0,0,0,.10);
+
+      --shadow: 0 18px 45px rgba(12,18,40,.14);
+      --shadow2: 0 10px 22px rgba(12,18,40,.12);
     }
 
-    html, body{ margin:0; padding:0; height:100%; background:var(--bg); color:var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    *{ box-sizing: border-box; }
+    html,body{
+      height:100%;
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 70% -10%, rgba(123,92,255,.18), transparent 60%),
+                  radial-gradient(900px 700px at 10% 10%, rgba(58,168,255,.14), transparent 55%),
+                  linear-gradient(180deg, var(--bg0), var(--bg1));
+      color: var(--text);
+      overflow: hidden;
     }
 
+    /* subtle cosmic stars */
+    body::before{
+      content:"";
+      position: fixed; inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(1px 1px at 12% 18%, rgba(255,255,255,.22), transparent 45%),
+        radial-gradient(1px 1px at 80% 22%, rgba(255,255,255,.18), transparent 45%),
+        radial-gradient(1px 1px at 46% 32%, rgba(255,255,255,.14), transparent 45%),
+        radial-gradient(1px 1px at 64% 68%, rgba(255,255,255,.16), transparent 45%),
+        radial-gradient(1px 1px at 24% 74%, rgba(255,255,255,.12), transparent 45%),
+        radial-gradient(1px 1px at 88% 78%, rgba(255,255,255,.14), transparent 45%),
+        radial-gradient(2px 2px at 35% 55%, rgba(255,255,255,.09), transparent 55%),
+        radial-gradient(2px 2px at 72% 46%, rgba(255,255,255,.08), transparent 55%);
+      opacity: .85;
+      filter: blur(.1px);
+      animation: drift 18s linear infinite;
+    }
+    @keyframes drift{
+      0%{ transform: translate3d(0,0,0); opacity:.80; }
+      50%{ transform: translate3d(-6px, 4px,0); opacity:.95; }
+      100%{ transform: translate3d(0,0,0); opacity:.82; }
+    }
+
+    /* app */
     .app{
-      min-height: 100vh;
+      height:100%;
+      display:flex;
+      flex-direction: column;
       padding:
         calc(env(safe-area-inset-top) + var(--pad))
-        calc(env(safe-area-inset-right) + var(--pad))
-        calc(env(safe-area-inset-bottom) + 74px + var(--pad)) /* место под нижнее меню */
-        calc(env(safe-area-inset-left) + var(--pad));
-      box-sizing: border-box;
-      display:flex;
-      flex-direction:column;
-      gap: var(--gap);
+        var(--pad)
+        calc(env(safe-area-inset-bottom) + var(--navH) + 14px)
+        var(--pad);
+      gap: 14px;
     }
 
-    /* ===== TOP BAR ===== */
+    /* top bar */
     .topbar{
       display:flex;
       align-items:center;
-      justify-content:flex-start;
-      gap:10px;
+      justify-content: space-between;
+      gap: 10px;
     }
-
-    .balance-chip{
+    .brand{
       display:flex;
       align-items:center;
-      gap:8px;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 999px;
+      gap:10px;
+      min-width: 120px;
+    }
+    .logoDot{
+      width: 12px; height: 12px; border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 0 0 6px rgba(58,168,255,.10), 0 0 24px rgba(123,92,255,.20);
+    }
+    .brandTitle{
+      display:flex;
+      flex-direction: column;
+      line-height: 1.05;
+    }
+    .brandTitle .t1{ font-weight: 700; letter-spacing: .2px; font-size: 14px; }
+    .brandTitle .t2{ color: var(--muted2); font-size: 12px; margin-top:2px; }
+
+    /* balances (right) */
+    .balances{
+      display:flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .pill{
+      display:flex;
+      align-items:center;
+      gap:10px;
       padding: 10px 12px;
-      box-shadow: var(--shadow);
-      cursor:pointer;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      cursor: pointer;
       user-select:none;
+      transition: transform var(--t1) ease, background var(--t1) ease;
+    }
+    .pill:active{ transform: scale(.98); }
+    .pill .meta{
+      display:flex; flex-direction:column;
+      line-height: 1.05;
+    }
+    .pill .meta .k{ font-size: 11px; color: var(--muted2); }
+    .pill .meta .v{ font-size: 14px; font-weight: 700; letter-spacing:.2px; }
+
+    .iconBox{
+      width: 28px; height: 28px;
+      border-radius: 10px;
+      background: rgba(0,0,0,.18);
+      border: 1px solid rgba(0,0,0,.25);
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden;
+      flex: 0 0 auto;
+    }
+    [data-theme="light"] .iconBox{
+      background: rgba(255,255,255,.65);
+      border: 1px solid rgba(0,0,0,.10);
+    }
+    .iconBox svg{ width: 18px; height: 18px; opacity:.92; }
+
+    /* bigger star icon */
+    .starImg{
+      width: 22px; height: 22px;
+      display:block;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,.25));
     }
 
-    .balance-chip:active{ transform: translateY(1px); }
+    /* main content card */
+    .panel{
+      flex: 1 1 auto;
+      border-radius: var(--r24);
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      overflow:hidden;
+      position: relative;
+    }
 
-    .chip-title{
+    .panelInner{
+      height:100%;
+      overflow:auto;
+      padding: 14px;
+      scrollbar-width: none;
+    }
+    .panelInner::-webkit-scrollbar{ display:none; }
+
+    .sectionTitle{
       font-size: 12px;
       color: var(--muted2);
-      line-height: 1;
-      margin-bottom: 2px;
-    }
-    .chip-value{
-      font-weight: 850;
-      letter-spacing:.2px;
-      line-height: 1;
-      font-size: 14px;
-    }
-
-    .chip-col{
-      display:flex;
-      flex-direction:column;
-      gap:3px;
-    }
-
-    .stars-icon{
-      width: 18px;
-      height: 18px;
-      border-radius: 4px;
-      object-fit: contain;
-      opacity: .95;
-    }
-
-    /* ===== PAGES ===== */
-    .page{
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: var(--r20);
-      padding: 14px;
-      box-shadow: var(--shadow);
-      min-height: 52vh;
-    }
-
-    .center{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      min-height: 42vh;
-      color: var(--muted);
-      font-weight: 800;
-      font-size: 18px;
-      letter-spacing:.2px;
-    }
-
-    /* ===== PROFILE ===== */
-    .profile{
-      display:flex;
-      flex-direction:column;
-      gap: 14px;
-      align-items:stretch;
-    }
-
-    .avatar-wrap{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:10px;
-      padding-top: 6px;
-    }
-
-    .avatar{
-      width: 92px;
-      height: 92px;
-      border-radius: 999px;
-      background: var(--panel2);
-      border: 1px solid var(--border);
-      overflow:hidden;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight: 900;
-      font-size: 28px;
-      box-shadow: var(--shadow);
-    }
-    .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
-
-    .pid{
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .uname{
-      font-weight: 900;
-      font-size: 16px;
-    }
-
-    .grid2{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      letter-spacing: .2px;
+      margin: 6px 2px 10px;
+      text-transform: uppercase;
     }
 
     .card{
-      background: var(--panel2);
+      border-radius: var(--r20);
+      background: var(--glass);
       border: 1px solid var(--border);
-      border-radius: var(--r16);
-      padding: 12px;
-    }
-
-    .card .label{ color: var(--muted2); font-size: 12px; margin-bottom: 6px; }
-    .card .big{ font-weight: 900; font-size: 16px; }
-
-    .field{
-      display:flex;
-      gap:10px;
-    }
-
-    input{
-      width:100%;
-      padding: 12px 12px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background: var(--panel2);
-      color: var(--text);
-      outline: none;
-    }
-
-    .btn{
-      padding: 12px 14px;
-      border-radius: 14px;
-      border: 0;
-      cursor:pointer;
-      font-weight: 900;
-      background: var(--panel2);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-    .btn.primary{ background: var(--accent); color: var(--accentText); border-color: transparent; }
-    .btn.danger{ background: rgba(255,77,79,.16); color: var(--danger); border-color: rgba(255,77,79,.35); }
-
-    /* ===== SETTINGS ===== */
-    .settings{
-      display:flex;
-      flex-direction:column;
-      gap: 12px;
+      box-shadow: var(--shadow2);
+      padding: 14px;
     }
 
     .row{
       display:flex;
       align-items:center;
-      justify-content:space-between;
-      gap: 10px;
+      justify-content: space-between;
+      gap: 12px;
     }
-    .row .left{
-      display:flex;
-      flex-direction:column;
-      gap: 3px;
-    }
-    .row .ttl{ font-weight: 900; }
-    .row .sub{ font-size: 12px; color: var(--muted); }
 
-    .seg{
+    .btn{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-weight: 600;
+      letter-spacing:.2px;
+      cursor:pointer;
+      user-select:none;
+      transition: transform var(--t1) ease, background var(--t1) ease;
+      display:inline-flex; align-items:center; gap:10px;
+    }
+    .btn:active{ transform: scale(.98); }
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(58,168,255,.28), rgba(123,92,255,.22));
+      border-color: rgba(58,168,255,.20);
+    }
+    .btn.danger{
+      background: rgba(255,77,79,.12);
+      border-color: rgba(255,77,79,.25);
+      color: var(--text);
+    }
+
+    .mini{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    /* bottom nav (liquid glass) */
+    .nav{
+      position: fixed;
+      left: 0; right: 0;
+      bottom: 0;
+      padding: 0 var(--pad) calc(env(safe-area-inset-bottom) + 10px);
+      pointer-events: none;
+      z-index: 20;
+    }
+    .navBar{
+      pointer-events: auto;
+      height: var(--navH);
+      border-radius: 999px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(0,0,0,.28); /* тонкая черная обводка */
+      box-shadow: 0 18px 45px rgba(0,0,0,.45);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
       display:flex;
+      align-items:center;
+      justify-content: space-around;
+      padding: 8px;
       gap: 8px;
     }
-
-    /* ===== BOTTOM NAV ===== */
-    .bottom-nav{
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      padding:
-        10px
-        calc(env(safe-area-inset-right) + 14px)
-        calc(env(safe-area-inset-bottom) + 10px)
-        calc(env(safe-area-inset-left) + 14px);
-      box-sizing: border-box;
-      background: linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,0));
-      pointer-events:none;
+    [data-theme="light"] .navBar{
+      border: 1px solid rgba(0,0,0,.16);
+      box-shadow: 0 18px 40px rgba(16,22,44,.12);
     }
 
-    [data-theme="light"] .bottom-nav{
-      background: linear-gradient(to top, rgba(255,255,255,.9), rgba(255,255,255,0));
-    }
-
-    .nav-inner{
-      pointer-events:auto;
-      display:grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 10px;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 10px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-    }
-
-    .nav-btn{
-      border:0;
-      background: transparent;
-      color: var(--muted);
-      padding: 10px 8px;
-      border-radius: 14px;
-      cursor:pointer;
-      font-weight: 900;
+    .navItem{
+      flex: 1;
+      height: 100%;
+      border-radius: 999px;
       display:flex;
-      flex-direction:column;
       align-items:center;
-      gap: 4px;
-      user-select:none;
-    }
-    .nav-btn.active{
-      background: var(--panel2);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-    .nav-ico{ font-size: 18px; line-height: 1; }
-    .nav-txt{ font-size: 12px; line-height: 1; }
-
-    /* ===== MODAL / SHEET ===== */
-    .overlay{
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.55);
-      display:none;
-      align-items:flex-end;
       justify-content:center;
-      padding:
-        14px
-        calc(env(safe-area-inset-right) + 14px)
-        calc(env(safe-area-inset-bottom) + 14px)
-        calc(env(safe-area-inset-left) + 14px);
-      box-sizing: border-box;
-      z-index: 9999;
+      gap: 10px;
+      color: var(--muted);
+      cursor:pointer;
+      user-select:none;
+      transition: background var(--t1) ease, transform var(--t1) ease, color var(--t1) ease;
+      padding: 10px 10px;
+      position: relative;
     }
-    .overlay.show{ display:flex; }
+    .navItem:active{ transform: scale(.985); }
+    .navItem svg{ width: 18px; height: 18px; opacity:.92; }
+    .navItem .lbl{
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: .15px;
+    }
+    .navItem.active{
+      color: var(--text);
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(0,0,0,.28);
+    }
+    [data-theme="light"] .navItem.active{
+      background: rgba(255,255,255,.85);
+      border: 1px solid rgba(0,0,0,.12);
+    }
 
-    .sheet{
-      width: min(520px, 100%);
-      background: var(--bg);
+    /* toast */
+    .toastWrap{
+      position: fixed;
+      left: 0; right: 0;
+      bottom: calc(env(safe-area-inset-bottom) + var(--navH) + 22px);
+      display:flex;
+      justify-content: center;
+      pointer-events:none;
+      z-index: 50;
+    }
+    .toast{
+      pointer-events:none;
+      opacity:0;
+      transform: translateY(10px);
+      transition: opacity var(--t1) ease, transform var(--t1) ease;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.42);
+      color: rgba(255,255,255,.92);
+      border: 1px solid rgba(255,255,255,.10);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 18px 45px rgba(0,0,0,.45);
+      font-weight: 650;
+      letter-spacing:.15px;
+      font-size: 12px;
+    }
+    [data-theme="light"] .toast{
+      background: rgba(10,14,24,.82);
+      color: rgba(255,255,255,.95);
+    }
+    .toast.show{
+      opacity:1;
+      transform: translateY(0);
+    }
+
+    /* profile header layout */
+    .profileHead{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+    }
+    .ava{
+      width: 52px; height: 52px;
+      border-radius: 16px;
+      overflow:hidden;
+      background: rgba(255,255,255,.08);
       border: 1px solid var(--border);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
+      flex: 0 0 auto;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .ava img{ width:100%; height:100%; object-fit: cover; display:block; }
+    .avaFallback{
+      width: 22px; height: 22px; opacity:.9;
+    }
+    .pinfo{
+      display:flex; flex-direction: column; gap: 4px;
+      min-width: 0;
+    }
+    .pname{
+      font-size: 15px;
+      font-weight: 750;
+      letter-spacing:.2px;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      max-width: 70vw;
+    }
+    .pid{
+      font-size: 12px;
+      color: var(--muted);
+      display:flex; gap: 10px; flex-wrap: wrap;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* promo slide */
+    .promoBar{
+      margin-top: 12px;
+      overflow:hidden;
+      border-radius: var(--r20);
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.05);
+    }
+    .promoTop{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      padding: 12px 12px;
+    }
+    .promoTop .left{
+      display:flex; align-items:center; gap: 10px;
+    }
+    .promoTop .ttl{
+      font-weight: 750;
+      letter-spacing:.2px;
+      font-size: 13px;
+    }
+    .promoTop .sub{
+      font-size: 12px;
+      color: var(--muted2);
+      margin-top: 2px;
+    }
+    .promoTop .txt{
+      display:flex; flex-direction: column;
+      line-height: 1.05;
+    }
+    .promoTop button{
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-weight: 750;
+      cursor:pointer;
+      user-select:none;
+      transition: transform var(--t1) ease, background var(--t1) ease;
+      display:flex; align-items:center; gap: 10px;
+    }
+    [data-theme="light"] .promoTop button{ background: rgba(255,255,255,.75); }
+    .promoTop button:active{ transform: scale(.98); }
+
+    .promoPane{
+      max-height: 0;
+      transition: max-height var(--t2) ease;
       overflow:hidden;
     }
-
-    .sheet-head{
-      padding: 14px 14px 10px;
+    .promoPane.open{ max-height: 220px; }
+    .promoBody{
+      padding: 0 12px 12px;
       display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 10px;
-      border-bottom: 1px solid var(--border);
-      background: var(--panel);
-    }
-    .sheet-title{
-      font-weight: 950;
-      letter-spacing:.2px;
-    }
-    .sheet-close{
-      background: transparent;
-      border: 0;
-      color: var(--muted);
-      font-size: 18px;
-      cursor:pointer;
-      padding: 6px 10px;
-      border-radius: 10px;
-    }
-
-    .sheet-body{
-      padding: 14px;
-      display:flex;
-      flex-direction:column;
+      flex-direction: column;
       gap: 10px;
     }
-
-    .sheet-item{
+    .input{
       width:100%;
-      text-align:left;
       padding: 12px 12px;
       border-radius: 14px;
       border: 1px solid var(--border);
-      background: var(--panel2);
+      background: rgba(0,0,0,.22);
       color: var(--text);
-      cursor:pointer;
-      font-weight: 850;
+      outline:none;
+      font-weight: 650;
+      letter-spacing:.2px;
+      transition: border-color var(--t1) ease, background var(--t1) ease;
+    }
+    [data-theme="light"] .input{ background: rgba(255,255,255,.75); }
+    .input:focus{ border-color: rgba(58,168,255,.35); }
+    .promoActions{
+      display:flex; gap: 10px;
+    }
+    .promoActions .btn{ flex:1; justify-content:center; }
+
+    /* settings rows */
+    .settingRow{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 12px;
+      border-radius: var(--r20);
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border);
+    }
+    .settingRow .left{
+      display:flex; flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+    .settingRow .t{
+      font-weight: 750;
+      letter-spacing: .2px;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .settingRow .s{
+      font-size: 12px;
+      color: var(--muted2);
     }
 
-    /* simple dialog */
-    .dialog{
-      width: min(420px, 100%);
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
+    .seg{
+      display:flex;
+      background: rgba(0,0,0,.20);
+      border: 1px solid rgba(0,0,0,.28);
+      border-radius: 999px;
       overflow:hidden;
-      align-self:center;
     }
-    .dialog-body{ padding: 18px 16px; color: var(--text); font-weight: 850; text-align:center; }
-    .dialog-foot{
-      padding: 12px;
-      border-top: 1px solid var(--border);
-      background: var(--panel);
+    [data-theme="light"] .seg{
+      background: rgba(255,255,255,.75);
+      border: 1px solid rgba(0,0,0,.12);
     }
-    .dialog-foot .btn{ width:100%; }
+    .seg button{
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 9px 12px;
+      font-weight: 750;
+      cursor:pointer;
+      transition: background var(--t1) ease, color var(--t1) ease;
+    }
+    .seg button.active{
+      color: var(--text);
+      background: rgba(255,255,255,.08);
+    }
+    [data-theme="light"] .seg button.active{
+      background: rgba(0,0,0,.06);
+    }
+
+    /* admin overlay */
+    .overlay{
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display:none;
+      background: rgba(0,0,0,.34);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .overlay.show{ display:block; }
+
+    .adminScreen{
+      position: absolute;
+      inset: 0;
+      padding:
+        calc(env(safe-area-inset-top) + 14px)
+        var(--pad)
+        calc(env(safe-area-inset-bottom) + 14px)
+        var(--pad);
+      transform: translateY(12px);
+      opacity: 0;
+      transition: transform var(--t1) ease, opacity var(--t1) ease;
+    }
+    .overlay.show .adminScreen{
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .adminWrap{
+      height: 100%;
+      border-radius: var(--r24);
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      overflow:hidden;
+      display:flex;
+      flex-direction: column;
+    }
+    .adminTop{
+      padding: 12px 12px;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .backBtn{
+      width: 40px; height: 40px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+      transition: transform var(--t1) ease;
+      user-select:none;
+    }
+    [data-theme="light"] .backBtn{ background: rgba(255,255,255,.75); }
+    .backBtn:active{ transform: scale(.98); }
+    .backBtn svg{ width: 18px; height: 18px; }
+
+    .adminTitle{
+      font-weight: 850;
+      letter-spacing:.2px;
+      font-size: 14px;
+      text-align:center;
+      flex: 1;
+    }
+
+    .adminBody{
+      padding: 14px;
+      overflow:auto;
+      scrollbar-width: none;
+    }
+    .adminBody::-webkit-scrollbar{ display:none; }
+
+    /* bottom sheet */
+    .sheet{
+      position: fixed;
+      left: 0; right: 0;
+      bottom: 0;
+      z-index: 60;
+      display:none;
+      padding: 0 var(--pad) calc(env(safe-area-inset-bottom) + 12px);
+      pointer-events:none;
+    }
+    .sheet.show{ display:block; }
+    .sheetInner{
+      pointer-events:auto;
+      width: 100%;
+      max-width: 780px;
+      margin: 0 auto;
+      border-radius: 24px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      transform: translateY(14px);
+      opacity: 0;
+      transition: transform var(--t1) ease, opacity var(--t1) ease;
+      overflow:hidden;
+    }
+    .sheet.show .sheetInner{
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .grab{
+      width: 44px;
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.18);
+      margin: 10px auto 6px;
+    }
+    .sheetHeader{
+      padding: 6px 14px 10px;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .sheetHeader .h{
+      font-weight: 850;
+      letter-spacing:.2px;
+      font-size: 13px;
+    }
+    .sheetHeader .ok{
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 9px 12px;
+      font-weight: 850;
+      cursor:pointer;
+      user-select:none;
+      transition: transform var(--t1) ease;
+    }
+    [data-theme="light"] .sheetHeader .ok{ background: rgba(255,255,255,.75); }
+    .sheetHeader .ok:active{ transform: scale(.98); }
+
+    .sheetBody{
+      padding: 0 14px 14px;
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .two{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .label{
+      font-size: 11px;
+      color: var(--muted2);
+      margin: 0 2px 6px;
+      letter-spacing:.2px;
+      text-transform: uppercase;
+    }
 
     .hint{
-      color: var(--muted2);
       font-size: 12px;
-      line-height: 1.35;
+      color: var(--muted2);
+      line-height: 1.4;
+    }
+
+    .list{
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .empty{
+      padding: 14px;
+      border-radius: var(--r20);
+      border: 1px dashed rgba(255,255,255,.14);
+      color: var(--muted2);
+      text-align:center;
+      background: rgba(255,255,255,.03);
+    }
+    [data-theme="light"] .empty{
+      border: 1px dashed rgba(0,0,0,.14);
     }
   </style>
 </head>
 
-<body>
-  <div class="app" id="app" data-theme="dark">
-    <!-- TOP BAR -->
+<body data-theme="dark">
+  <div class="app">
     <div class="topbar">
-      <!-- Crypto balance -->
-      <div class="balance-chip" id="chipCrypto" title="Баланс">
-        <div class="chip-col">
-          <div class="chip-title" id="lblCrypto">Balance</div>
-          <div class="chip-value"><span id="valCrypto">0</span></div>
+      <div class="brand">
+        <div class="logoDot"></div>
+        <div class="brandTitle">
+          <div class="t1">Astra</div>
+          <div class="t2" id="subtitle">Mini App</div>
         </div>
       </div>
 
-      <!-- Stars balance -->
-      <div class="balance-chip" id="chipStars" title="Telegram Stars">
-        <img class="stars-icon" id="starsIcon" alt="stars" />
-        <div class="chip-col">
-          <div class="chip-title" id="lblStars">Telegram Stars</div>
-          <div class="chip-value"><span id="valStars">0</span></div>
+      <div class="balances">
+        <!-- общий баланс (справа) -->
+        <div class="pill" id="balancePill" title="Balance">
+          <div class="iconBox" id="tonIconBox" title="TON">
+            <!-- TON placeholder icon -->
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 2.8c4.7 0 8.5 3.8 8.5 8.5S16.7 19.8 12 19.8 3.5 16 3.5 11.3 7.3 2.8 12 2.8Z" stroke="currentColor" opacity=".55" />
+              <path d="M8.2 8.9h7.6c.7 0 1.1.8.7 1.4l-3.8 5.2c-.3.4-.9.4-1.2 0l-3.8-5.2c-.4-.6 0-1.4.7-1.4Z" fill="currentColor" opacity=".92"/>
+            </svg>
+          </div>
+
+          <div class="meta">
+            <div class="k" id="balLabel">Balance</div>
+            <div class="v"><span id="balValue">0</span></div>
+          </div>
+
+          <!-- вторая иконка-заглушка (потом добавишь) -->
+          <div class="iconBox" title="Soon" style="width:26px;height:26px;border-radius:10px;">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 3.5c4.7 0 8.5 3.8 8.5 8.5s-3.8 8.5-8.5 8.5-8.5-3.8-8.5-8.5S7.3 3.5 12 3.5Z" stroke="currentColor" opacity=".55"/>
+              <path d="M12 8.2v4.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M12 16.8h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Stars (иконка звезды, без текста) -->
+        <div class="pill" id="starsPill" title="Telegram Stars">
+          <div class="iconBox" title="Stars">
+            <img id="starsIconImg" class="starImg" alt="star" />
+          </div>
+          <div class="meta">
+            <div class="k">Stars</div>
+            <div class="v"><span id="starsValue">0</span></div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- PAGE -->
-    <div class="page" id="page"></div>
+    <div class="panel">
+      <div class="panelInner" id="page"></div>
+    </div>
   </div>
 
-  <!-- Overlay (sheet / dialog) -->
-  <div class="overlay" id="overlay" aria-hidden="true"></div>
+  <!-- toast -->
+  <div class="toastWrap">
+    <div class="toast" id="toast">Технические работы</div>
+  </div>
 
-  <!-- Bottom nav -->
-  <div class="bottom-nav">
-    <div class="nav-inner">
-      <button class="nav-btn active" id="navHome">
-        <div class="nav-ico">🏠</div>
-        <div class="nav-txt" id="navHomeTxt">Основное</div>
-      </button>
-      <button class="nav-btn" id="navProfile">
-        <div class="nav-ico">👤</div>
-        <div class="nav-txt" id="navProfileTxt">Профиль</div>
-      </button>
-      <button class="nav-btn" id="navSettings">
-        <div class="nav-ico">⚙️</div>
-        <div class="nav-txt" id="navSettingsTxt">Настройки</div>
-      </button>
+  <!-- bottom nav -->
+  <div class="nav">
+    <div class="navBar">
+      <div class="navItem active" id="navHome">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M4.5 10.3 12 4.6l7.5 5.7v8.2c0 .9-.7 1.6-1.6 1.6h-3.2v-6H9.3v6H6.1c-.9 0-1.6-.7-1.6-1.6v-8.2Z" stroke="currentColor" opacity=".90"/>
+        </svg>
+        <div class="lbl">Главная</div>
+      </div>
+
+      <div class="navItem" id="navProfile">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M12 12.3a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" stroke="currentColor" opacity=".90"/>
+          <path d="M5.3 20.1c1.7-3.4 4.1-5.1 6.7-5.1s5 1.7 6.7 5.1" stroke="currentColor" opacity=".90" stroke-linecap="round"/>
+        </svg>
+        <div class="lbl">Профиль</div>
+      </div>
+
+      <div class="navItem" id="navSettings">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M12 15.1a3.1 3.1 0 1 0-3.1-3.1 3.1 3.1 0 0 0 3.1 3.1Z" stroke="currentColor" opacity=".90"/>
+          <path d="M19.4 12a7.5 7.5 0 0 0-.1-1l2-1.4-2-3.4-2.3.8a7.4 7.4 0 0 0-1.7-1l-.3-2.4H11l-.3 2.4a7.4 7.4 0 0 0-1.7 1l-2.3-.8-2 3.4 2 1.4a7.5 7.5 0 0 0 0 2l-2 1.4 2 3.4 2.3-.8a7.4 7.4 0 0 0 1.7 1l.3 2.4h4l.3-2.4a7.4 7.4 0 0 0 1.7-1l2.3.8 2-3.4-2-1.4c.1-.3.1-.6.1-1Z" stroke="currentColor" opacity=".55" stroke-linejoin="round"/>
+        </svg>
+        <div class="lbl">Настройки</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- admin overlay -->
+  <div class="overlay" id="adminOverlay">
+    <div class="adminScreen">
+      <div class="adminWrap">
+        <div class="adminTop">
+          <div class="backBtn" id="adminBack" title="Back">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M14.8 6.7 9.5 12l5.3 5.3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="adminTitle">Admin Panel</div>
+          <div style="width:40px;"></div>
+        </div>
+
+        <div class="adminBody" id="adminBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- bottom sheet for promo create -->
+  <div class="sheet" id="sheet">
+    <div class="sheetInner" id="sheetInner">
+      <div class="grab" id="grab"></div>
+      <div class="sheetHeader">
+        <div class="h" id="sheetTitle">Create Promo</div>
+        <button class="ok" id="sheetOk">OK</button>
+      </div>
+      <div class="sheetBody" id="sheetBody"></div>
     </div>
   </div>
 
   <script>
-    // ====== НАСТРОЙКИ (ВАЖНО) ======
-    // 1) ИКОНКА Telegram Stars: положи файл рядом с index.html и укажи путь:
-    //    пример: "stars.png" или "assets/stars.svg"
-    const STARS_ICON_PATH = "star.png";
+    // ========= SETTINGS =========
+    const STARS_ICON_PATH = "star.png";     // файл рядом с index.html
+    const OWNER_TG_ID     = 6482018325;     // владелец по Telegram ID
 
-    // 2) OWNER: тут можно указать Player ID владельца (чтобы видел админ-панель)
-    //    Сейчас: первый запуск — создастся Player ID, ты его увидишь в профиле и сюда вставишь.
-    const OWNER_PLAYER_ID = null; // оставим, но больше не используем
-const OWNER_TG_ID = 6482018325; // владелец по Telegram ID
-
-    // =================================
-
+    // ========= TELEGRAM =========
     const tg = window.Telegram?.WebApp;
+    if (tg) {
+      try{ tg.ready(); tg.expand(); }catch(e){}
+      try{ tg.disableVerticalSwipes?.(); }catch(e){}
+    }
 
+    // ========= STORAGE =========
     const LS = {
-      lang: "mini_lang",
-      theme: "mini_theme",
-      playerId: "mini_player_id",
-      user: "mini_user_data"
+      theme: "astra_theme",
+      lang: "astra_lang",
+      playerId: "astra_player_id",
+      promos: "astra_promos",         // {code,type,amount,maxUses,uses}
+      deposits: "astra_deposits"      // array (пока пусто)
     };
 
+    // ========= STATE =========
+    const state = {
+      theme: localStorage.getItem(LS.theme) || "dark",
+      lang:  localStorage.getItem(LS.lang) || "ru",
+      tab: "home",
+      user: null,        // {tg_id, username, first_name, photo_url}
+      playerId: null,    // 6 digits (local)
+      isOwner: false,
+      balances: { ton: 0, stars: 0 }
+    };
+
+    // ========= TEXT =========
     const TEXT = {
       ru: {
-        balance: "Баланс",
-        stars: "Telegram Stars",
-        soon: "Soon..",
-        ok: "ОК",
-        home: "Основное",
-        profile: "Профиль",
-        settings: "Настройки",
-        coming: "Скоро..",
-        yourId: "Ваш Player ID",
-        username: "Юзернейм",
-        refs: "Рефералы",
-        refCount: "Приглашено",
-        refIncome: "Доход от рефералов",
+        subtitle: "Mini App",
+        homeTitle: "Главная",
+        homeSoon: "Скоро",
+        profileTitle: "Профиль",
+        settingsTitle: "Настройки",
+        deposits: "История депозитов",
+        noOps: "Пока нет операций",
         promo: "Промокод",
-        promoPh: "Ввести промокод",
+        promoSub: "Введите код и примените",
+        open: "Открыть",
         apply: "Применить",
-        languages: "Язык",
+        reset: "Сброс",
+        tech: "Технические работы",
+        invalid: "Некорректный код",
+        short: "Слишком короткий код",
+        used: "Код уже использован",
+        ok: "Ок",
         theme: "Тема",
         dark: "Тёмная",
         light: "Светлая",
-        admin: "Админ-панель",
-        adminHint: "Управление пользователями (муляж).",
-        searchId: "Player ID пользователя",
-        find: "Найти",
-        giveMod: "Выдать модератора",
-        ban: "Забанить",
-        addBal: "Начислить баланс",
-        subBal: "Списать баланс",
-        resetRefs: "Сбросить рефералы",
-        noteOwner: "Админ-меню видно только владельцу."
+        language: "Язык",
+        ruLang: "RU",
+        enLang: "EN",
+        admin: "Admin Panel",
+        adminHint: "Управление промо",
+        createPromo: "Создать промо",
+        code: "Код",
+        next: "Далее",
+        reward: "Награда",
+        type: "Тип",
+        amount: "Количество",
+        uses: "Активации",
+        stars: "Stars",
+        ton: "TON",
+        saved: "Сохранено",
+        created: "Промо создано",
+        notInTg: "Откройте внутри Telegram"
       },
       en: {
-        balance: "Balance",
-        stars: "Telegram Stars",
-        soon: "Soon..",
-        ok: "OK",
-        home: "Home",
-        profile: "Profile",
-        settings: "Settings",
-        coming: "Coming soon..",
-        yourId: "Your Player ID",
-        username: "Username",
-        refs: "Referrals",
-        refCount: "Invited",
-        refIncome: "Referral income",
+        subtitle: "Mini App",
+        homeTitle: "Home",
+        homeSoon: "Coming soon",
+        profileTitle: "Profile",
+        settingsTitle: "Settings",
+        deposits: "Deposit history",
+        noOps: "No operations yet",
         promo: "Promo code",
-        promoPh: "Enter promo code",
+        promoSub: "Enter code and apply",
+        open: "Open",
         apply: "Apply",
-        languages: "Language",
+        reset: "Reset",
+        tech: "Maintenance",
+        invalid: "Invalid code",
+        short: "Code is too short",
+        used: "Already used",
+        ok: "OK",
         theme: "Theme",
         dark: "Dark",
         light: "Light",
-        admin: "Admin panel",
-        adminHint: "User management (mock).",
-        searchId: "User Player ID",
-        find: "Find",
-        giveMod: "Grant moderator",
-        ban: "Ban",
-        addBal: "Add balance",
-        subBal: "Subtract balance",
-        resetRefs: "Reset referrals",
-        noteOwner: "Admin menu is visible only to owner."
+        language: "Language",
+        ruLang: "RU",
+        enLang: "EN",
+        admin: "Admin Panel",
+        adminHint: "Promo management",
+        createPromo: "Create promo",
+        code: "Code",
+        next: "Next",
+        reward: "Reward",
+        type: "Type",
+        amount: "Amount",
+        uses: "Activations",
+        stars: "Stars",
+        ton: "TON",
+        saved: "Saved",
+        created: "Promo created",
+        notInTg: "Open inside Telegram"
       }
     };
 
-    const state = {
-      tab: "home",
-      lang: localStorage.getItem(LS.lang) || "ru",
-      theme: localStorage.getItem(LS.theme) || "dark",
-      cryptoBalance: 0,
-      starsBalance: 0,
-      playerId: localStorage.getItem(LS.playerId) || null,
-      user: null,
-      isOwner: false,
-    };
+    const T = (k)=> (TEXT[state.lang] && TEXT[state.lang][k]) ? TEXT[state.lang][k] : k;
 
-    const elApp = document.getElementById("app");
-    const elPage = document.getElementById("page");
-    const overlay = document.getElementById("overlay");
-
-    function T(key){ return (TEXT[state.lang] || TEXT.ru)[key] || key; }
-
-    function haptic(type="light"){
-      try { tg?.HapticFeedback?.impactOccurred?.(type); } catch(e){}
-    }
+    // ========= HELPERS =========
+    const $ = (id)=> document.getElementById(id);
 
     function setTheme(theme){
-      state.theme = theme === "light" ? "light" : "dark";
-      localStorage.setItem(LS.theme, state.theme);
-      elApp.setAttribute("data-theme", state.theme);
-
-      // подтянем цвета в Telegram (если доступно)
-      try {
-        if (tg) {
-          tg.setHeaderColor("secondary_bg_color");
-          tg.setBackgroundColor(tg.themeParams?.bg_color || (state.theme === "light" ? "#f6f7fb" : "#0b0c0f"));
-        }
-      } catch(e){}
-    }
-
-    function ensurePlayerId(){
-      if (state.playerId) return state.playerId;
-      // 6 цифр, сохраняем навсегда (муляж)
-      const id = String(Math.floor(100000 + Math.random() * 900000));
-      state.playerId = id;
-      localStorage.setItem(LS.playerId, id);
-      return id;
-    }
-
-    function loadUserFromTG(){
-      const tgUser = tg?.initDataUnsafe?.user || null;
-      const username = tgUser?.username ? `@${tgUser.username}` : (tgUser?.first_name || "Player");
-      const photoUrl = tgUser?.photo_url || null;
-
-      state.user = {
-        tg_id: tgUser?.id || null,
-        username,
-        photo_url: photoUrl,
-      };
-      localStorage.setItem(LS.user, JSON.stringify(state.user));
-    }
-
-    function loadUserFromLS(){
-      try {
-        const raw = localStorage.getItem(LS.user);
-        if (raw) state.user = JSON.parse(raw);
-      } catch(e){}
-      if (!state.user) state.user = { tg_id:null, username:"Player", photo_url:null };
+      state.theme = theme;
+      document.body.setAttribute("data-theme", theme);
+      localStorage.setItem(LS.theme, theme);
+      render();
+      renderAdmin(); // если открыт
     }
 
     function setLang(lang){
-      state.lang = (lang === "en") ? "en" : "ru";
-      localStorage.setItem(LS.lang, state.lang);
-      renderAll();
+      state.lang = lang;
+      localStorage.setItem(LS.lang, lang);
+      render();
+      renderAdmin();
     }
 
-    function showSheet(title, items){
-      overlay.innerHTML = `
-        <div class="sheet" role="dialog" aria-modal="true">
-          <div class="sheet-head">
-            <div class="sheet-title">${title}</div>
-            <button class="sheet-close" id="sheetClose">✕</button>
-          </div>
-          <div class="sheet-body">
-            ${items.map((it, i)=>`<button class="sheet-item" data-idx="${i}">${it.label}</button>`).join("")}
-          </div>
-        </div>
-      `;
-      overlay.classList.add("show");
-      overlay.onclick = (e)=>{ if (e.target === overlay) closeOverlay(); };
-      document.getElementById("sheetClose").onclick = closeOverlay;
-
-      [...overlay.querySelectorAll(".sheet-item")].forEach(btn=>{
-        btn.onclick = ()=>{
-          const idx = Number(btn.getAttribute("data-idx"));
-          const item = items[idx];
-          closeOverlay();
-          item.onClick?.();
-        };
-      });
+    function ensurePlayerId(){
+      let pid = localStorage.getItem(LS.playerId);
+      if (!pid){
+        pid = String(Math.floor(100000 + Math.random()*900000));
+        localStorage.setItem(LS.playerId, pid);
+      }
+      state.playerId = pid;
+      return pid;
     }
 
-    function showDialog(message){
-      overlay.innerHTML = `
-        <div class="dialog" role="dialog" aria-modal="true">
-          <div class="dialog-body">${message}</div>
-          <div class="dialog-foot">
-            <button class="btn primary" id="dlgOk">${T("ok")}</button>
-          </div>
-        </div>
-      `;
-      overlay.classList.add("show");
-      overlay.onclick = (e)=>{ if (e.target === overlay) closeOverlay(); };
-      document.getElementById("dlgOk").onclick = closeOverlay;
+    function getPromos(){
+      try{
+        const raw = localStorage.getItem(LS.promos);
+        return raw ? JSON.parse(raw) : [];
+      }catch(e){ return []; }
+    }
+    function setPromos(list){
+      localStorage.setItem(LS.promos, JSON.stringify(list));
     }
 
-    function closeOverlay(){
-      overlay.classList.remove("show");
-      overlay.innerHTML = "";
-      overlay.onclick = null;
+    function getDeposits(){
+      try{
+        const raw = localStorage.getItem(LS.deposits);
+        return raw ? JSON.parse(raw) : [];
+      }catch(e){ return []; }
     }
 
-    function setActiveNav(){
-      const map = { home:"navHome", profile:"navProfile", settings:"navSettings" };
-      ["navHome","navProfile","navSettings"].forEach(id=>{
-        document.getElementById(id).classList.toggle("active", id === map[state.tab]);
-      });
+    let toastTimer = null;
+    function showToast(msg, ms=3000){
+      const el = $("toast");
+      el.textContent = msg || T("tech");
+      el.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=>{
+        el.classList.remove("show");
+      }, ms);
     }
 
-    function renderTop(){
-      document.getElementById("lblCrypto").textContent = T("balance");
-      document.getElementById("lblStars").textContent = T("stars");
-      document.getElementById("valCrypto").textContent = String(state.cryptoBalance);
-      document.getElementById("valStars").textContent = String(state.starsBalance);
+    function haptic(kind="light"){
+      try{ tg?.HapticFeedback?.impactOccurred(kind); }catch(e){}
+    }
 
-      const icon = document.getElementById("starsIcon");
-      icon.src = STARS_ICON_PATH; // <- твоя иконка здесь
+    function sanitizeCode(str){
+      return (str || "")
+        .trim()
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "");
+    }
+
+    // ========= STAR ICON (fallback) =========
+    function setStarIcon(){
+      const img = $("starsIconImg");
+      img.src = STARS_ICON_PATH;
+      img.onerror = ()=>{
+        // fallback inline svg if png missing
+        const svg = `
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2.4l2.8 6.1 6.7.6-5 4.3 1.5 6.6L12 16.9 6 20l1.5-6.6-5-4.3 6.7-.6L12 2.4Z"
+              fill="currentColor" opacity=".95"/>
+          </svg>`;
+        const box = img.parentElement;
+        box.innerHTML = svg;
+      };
+    }
+
+    // ========= USER =========
+    function loadUser(){
+      const u = tg?.initDataUnsafe?.user;
+      state.user = u ? {
+        tg_id: u.id,
+        username: u.username ? ("@" + u.username) : "",
+        first_name: u.first_name || "",
+        photo_url: u.photo_url || ""
+      } : {
+        tg_id: null,
+        username: "",
+        first_name: "",
+        photo_url: ""
+      };
+
+      state.isOwner = !!(state.user?.tg_id && Number(state.user.tg_id) === Number(OWNER_TG_ID));
+    }
+
+    // ========= UI RENDER =========
+    function navSetActive(tab){
+      state.tab = tab;
+      $("navHome").classList.toggle("active", tab==="home");
+      $("navProfile").classList.toggle("active", tab==="profile");
+      $("navSettings").classList.toggle("active", tab==="settings");
+      render();
     }
 
     function renderHome(){
-      elPage.innerHTML = `<div class="center">${T("coming")}</div>`;
+      return `
+        <div class="sectionTitle">${T("homeTitle")}</div>
+        <div class="card">
+          <div style="font-weight:850;letter-spacing:.2px;">${T("homeSoon")}</div>
+          <div class="mini" style="margin-top:8px;">
+            ${state.lang==="ru" ? "Контент появится здесь." : "Content will appear here."}
+          </div>
+        </div>
+      `;
     }
 
     function renderProfile(){
-      const pid = ensurePlayerId();
-      const username = state.user?.username || "Player";
+      const displayName = state.user?.username || (state.user?.first_name || "User");
+      const pid = state.playerId || ensurePlayerId();
 
-      const firstLetter = (username.replace("@","").trim()[0] || "P").toUpperCase();
-      const avatarHtml = state.user?.photo_url
-        ? `<img src="${state.user.photo_url}" alt="avatar" />`
-        : `<div>${firstLetter}</div>`;
+      const deposits = getDeposits();
+      const depositsHtml = deposits.length ? deposits.map(d=>`
+        <div class="card">
+          <div class="row">
+            <div style="font-weight:800;">${d.title || "Deposit"}</div>
+            <div class="mini">${d.date || ""}</div>
+          </div>
+          <div class="mini" style="margin-top:6px;">${d.desc || ""}</div>
+        </div>
+      `).join("") : `
+        <div class="empty">${T("noOps")}</div>
+      `;
 
-      elPage.innerHTML = `
-        <div class="profile">
-          <div class="avatar-wrap">
-            <div class="avatar">${avatarHtml}</div>
-            <div class="pid">${T("yourId")}: <b>${pid}</b></div>
-            <div class="uname">${T("username")}: <b>${username}</b></div>
+      return `
+        <div class="sectionTitle">${T("profileTitle")}</div>
+
+        <div class="card">
+          <div class="profileHead">
+            <div class="ava">
+              ${
+                state.user?.photo_url
+                ? `<img src="${state.user.photo_url}" alt="ava">`
+                : `<svg class="avaFallback" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 12.3a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" stroke="currentColor" opacity=".90"/>
+                    <path d="M5.3 20.1c1.7-3.4 4.1-5.1 6.7-5.1s5 1.7 6.7 5.1" stroke="currentColor" opacity=".90" stroke-linecap="round"/>
+                   </svg>`
+              }
+            </div>
+
+            <div class="pinfo">
+              <div class="pname">${escapeHtml(displayName)}</div>
+              <div class="pid">
+                <span class="chip">Player ID: <b style="color:var(--text)">${pid}</b></span>
+                ${state.user?.tg_id ? `<span class="chip">TG ID: <b style="color:var(--text)">${state.user.tg_id}</b></span>` : ""}
+              </div>
+            </div>
           </div>
 
-          <div class="grid2">
-            <div class="card">
-              <div class="label">${T("refCount")}</div>
-              <div class="big">0</div>
-            </div>
-            <div class="card">
-              <div class="label">${T("refIncome")}</div>
-              <div class="big">0</div>
-            </div>
-          </div>
+          <!-- promo -->
+          <div class="promoBar">
+            <div class="promoTop">
+              <div class="left">
+                <div class="iconBox" style="width:30px;height:30px;border-radius:12px;">
+                  <!-- promo icon (строгий) -->
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M7 7.5h10v9H7v-9Z" stroke="currentColor" opacity=".55"/>
+                    <path d="M9 10.2h6M9 12.6h6M9 15h4" stroke="currentColor" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div class="txt">
+                  <div class="ttl">${T("promo")}</div>
+                  <div class="sub">${T("promoSub")}</div>
+                </div>
+              </div>
 
-          <div class="card">
-            <div class="label">${T("promo")}</div>
-            <div class="field">
-              <input id="promoInput" placeholder="${T("promoPh")}" />
-              <button class="btn primary" id="promoApply">${T("apply")}</button>
+              <button id="promoToggle">
+                <span>${T("open")}</span>
+              </button>
             </div>
-            <div class="hint" style="margin-top:8px;">
-              (Пока муляж — позже сделаем начисление баланса по промокоду.)
+
+            <div class="promoPane" id="promoPane">
+              <div class="promoBody">
+                <input class="input" id="promoInput" placeholder="${state.lang==='ru'?'Введите код':'Enter code'}" maxlength="16"/>
+                <div class="promoActions">
+                  <button class="btn primary" id="promoApply">${T("apply")}</button>
+                  <button class="btn" id="promoReset">${T("reset")}</button>
+                </div>
+                <div class="hint">
+                  ${state.lang==="ru"
+                    ? "Код должен быть не короче 5 символов (латиница/цифры)."
+                    : "Min 5 chars (A–Z / 0–9)."
+                  }
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      `;
 
-      document.getElementById("promoApply").onclick = ()=>{
-        haptic("light");
-        showDialog(T("soon"));
-      };
+        <div class="sectionTitle">${T("deposits")}</div>
+        <div class="list">
+          ${depositsHtml}
+        </div>
+      `;
     }
 
     function renderSettings(){
-      const pid = ensurePlayerId();
+      return `
+        <div class="sectionTitle">${T("settingsTitle")}</div>
 
-   state.isOwner = (state.user?.tg_id && Number(state.user.tg_id) === Number(OWNER_TG_ID));
+        <div class="settingRow">
+          <div class="left">
+            <div class="t">${T("theme")}</div>
+            <div class="s">${state.lang==="ru" ? "Выберите стиль интерфейса" : "Choose UI style"}</div>
+          </div>
+          <div class="seg">
+            <button id="themeDark" class="${state.theme==='dark'?'active':''}">${T("dark")}</button>
+            <button id="themeLight" class="${state.theme==='light'?'active':''}">${T("light")}</button>
+          </div>
+        </div>
 
+        <div class="settingRow" style="margin-top:10px;">
+          <div class="left">
+            <div class="t">${T("language")}</div>
+            <div class="s">${state.lang==="ru" ? "RU / EN" : "RU / EN"}</div>
+          </div>
+          <div class="seg">
+            <button id="langRu" class="${state.lang==='ru'?'active':''}">${T("ruLang")}</button>
+            <button id="langEn" class="${state.lang==='en'?'active':''}">${T("enLang")}</button>
+          </div>
+        </div>
 
-      elPage.innerHTML = `
-        <div class="settings">
-          <div class="card">
-            <div class="row">
-              <div class="left">
-                <div class="ttl">${T("languages")}</div>
-                <div class="sub">RU / EN</div>
+        <div style="height:10px;"></div>
+
+        <div class="card">
+          <div class="row">
+            <div>
+              <div style="font-weight:850;letter-spacing:.2px;">${T("admin")}</div>
+              <div class="mini" style="margin-top:6px;">${T("adminHint")}</div>
+            </div>
+            <button class="btn ${state.isOwner?'primary':''}" id="adminOpen" ${state.isOwner?'':'disabled'} style="${state.isOwner?'':'opacity:.45;cursor:not-allowed;'}">
+              ${state.isOwner ? T("open") : "Locked"}
+            </button>
+          </div>
+
+          ${
+            (!state.user?.tg_id)
+              ? `<div class="mini" style="margin-top:10px;color:var(--muted2)">${T("notInTg")}</div>`
+              : ""
+          }
+        </div>
+      `;
+    }
+
+    function render(){
+      document.body.setAttribute("data-theme", state.theme);
+      $("subtitle").textContent = T("subtitle");
+      $("balLabel").textContent = state.lang==="ru" ? "Баланс" : "Balance";
+      $("balValue").textContent = String(state.balances.ton);
+      $("starsValue").textContent = String(state.balances.stars);
+
+      const page = $("page");
+      if (state.tab==="home") page.innerHTML = renderHome();
+      if (state.tab==="profile") page.innerHTML = renderProfile();
+      if (state.tab==="settings") page.innerHTML = renderSettings();
+
+      wirePage();
+      setStarIcon();
+    }
+
+    // ========= ADMIN =========
+    function openAdmin(){
+      $("adminOverlay").classList.add("show");
+      renderAdmin();
+    }
+    function closeAdmin(){
+      $("adminOverlay").classList.remove("show");
+      closeSheet(true);
+    }
+
+    function renderAdmin(){
+      const body = $("adminBody");
+      const name = state.user?.username || (state.user?.first_name || "Owner");
+      const ava = state.user?.photo_url;
+
+      const promos = getPromos().slice().reverse();
+      const promosHtml = promos.length ? promos.map(p=>`
+        <div class="card">
+          <div class="row">
+            <div style="font-weight:900;letter-spacing:.2px;">${p.code}</div>
+            <div class="chip">${p.type} • ${p.amount}</div>
+          </div>
+          <div class="mini" style="margin-top:8px;">
+            ${state.lang==="ru" ? "Активации" : "Uses"}: <b style="color:var(--text)">${p.uses || 0}</b> / <b style="color:var(--text)">${p.maxUses}</b>
+          </div>
+        </div>
+      `).join("") : `<div class="empty">${state.lang==="ru" ? "Промо пока нет" : "No promos yet"}</div>`;
+
+      body.innerHTML = `
+        <div class="card">
+          <div class="profileHead">
+            <div class="ava" style="width:46px;height:46px;border-radius:16px;">
+              ${
+                ava
+                ? `<img src="${ava}" alt="ava">`
+                : `<svg class="avaFallback" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 12.3a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" stroke="currentColor" opacity=".90"/>
+                    <path d="M5.3 20.1c1.7-3.4 4.1-5.1 6.7-5.1s5 1.7 6.7 5.1" stroke="currentColor" opacity=".90" stroke-linecap="round"/>
+                   </svg>`
+              }
+            </div>
+            <div class="pinfo">
+              <div class="pname">${escapeHtml(name)}</div>
+              <div class="pid">
+                <span class="chip">TG ID: <b style="color:var(--text)">${state.user?.tg_id || "-"}</b></span>
               </div>
-              <div class="seg">
-                <button class="btn ${state.lang==="ru"?"primary":""}" id="langRu">🇷🇺 RU</button>
-                <button class="btn ${state.lang==="en"?"primary":""}" id="langEn">🇬🇧 EN</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:12px;"></div>
+
+        <div class="card">
+          <div class="row">
+            <div>
+              <div style="font-weight:900;letter-spacing:.2px;">${T("createPromo")}</div>
+              <div class="mini" style="margin-top:6px;">
+                ${state.lang==="ru" ? "Создайте код и задайте награду." : "Create code and set reward."}
+              </div>
+            </div>
+            <button class="btn primary" id="btnCreatePromo">${T("open")}</button>
+          </div>
+        </div>
+
+        <div style="height:10px;"></div>
+        <div class="sectionTitle">${state.lang==="ru" ? "Промо" : "Promos"}</div>
+        <div class="list">${promosHtml}</div>
+      `;
+
+      const btn = $("btnCreatePromo");
+      if (btn){
+        btn.onclick = ()=>{
+          haptic("light");
+          openPromoSheet();
+        };
+      }
+    }
+
+    // ========= SHEET (PROMO CREATE) =========
+    const sheetState = {
+      step: 1,
+      code: "",
+      type: "Stars",
+      amount: 10,
+      maxUses: 10
+    };
+
+    function openPromoSheet(){
+      sheetState.step = 1;
+      sheetState.code = "";
+      sheetState.type = "Stars";
+      sheetState.amount = 10;
+      sheetState.maxUses = 10;
+      renderSheet();
+      $("sheet").classList.add("show");
+    }
+    function closeSheet(force=false){
+      const sh = $("sheet");
+      if (!sh.classList.contains("show")) return;
+      sh.classList.remove("show");
+      if (force) return;
+    }
+
+    function renderSheet(){
+      const title = $("sheetTitle");
+      const body = $("sheetBody");
+
+      if (sheetState.step === 1){
+        title.textContent = T("createPromo");
+        body.innerHTML = `
+          <div>
+            <div class="label">${T("code")}</div>
+            <input class="input" id="promoCodeInput" placeholder="A1B2C" maxlength="16" value="${escapeAttr(sheetState.code)}"/>
+            <div class="hint" style="margin-top:8px;">
+              ${state.lang==="ru"
+                ? "Минимум 5 символов. Только A–Z и 0–9."
+                : "Min 5 chars. Only A–Z and 0–9."
+              }
+            </div>
+          </div>
+
+          <div class="two">
+            <div>
+              <div class="label">${T("uses")}</div>
+              <input class="input" id="promoUsesInput" type="number" min="1" max="9999" value="${sheetState.maxUses}"/>
+            </div>
+            <div>
+              <div class="label">${T("type")}</div>
+              <div class="seg" style="width:100%;justify-content:space-between;">
+                <button id="typeStars" class="${sheetState.type==='Stars'?'active':''}" style="flex:1;">${T("stars")}</button>
+                <button id="typeTon" class="${sheetState.type==='TON'?'active':''}" style="flex:1;">${T("ton")}</button>
               </div>
             </div>
           </div>
 
-          <div class="card">
-            <div class="row">
-              <div class="left">
-                <div class="ttl">${T("theme")}</div>
-                <div class="sub">${state.theme==="dark" ? T("dark") : T("light")}</div>
-              </div>
-              <div class="seg">
-                <button class="btn ${state.theme==="dark"?"primary":""}" id="themeDark">🌙</button>
-                <button class="btn ${state.theme==="light"?"primary":""}" id="themeLight">☀️</button>
-              </div>
-            </div>
+          <div>
+            <div class="label">${T("amount")}</div>
+            <input class="input" id="promoAmountInput" type="number" min="1" max="999999" value="${sheetState.amount}"/>
           </div>
 
-          <div class="card">
+          <div class="row" style="gap:10px;margin-top:6px;">
+            <button class="btn" id="sheetCancel" style="flex:1;justify-content:center;">${state.lang==="ru"?"Отмена":"Cancel"}</button>
+            <button class="btn primary" id="sheetNext" style="flex:1;justify-content:center;">${T("next")}</button>
+          </div>
+        `;
+
+        // wire
+        $("sheetCancel").onclick = ()=>{ haptic("light"); closeSheet(); };
+        $("typeStars").onclick = ()=>{ sheetState.type="Stars"; renderSheet(); };
+        $("typeTon").onclick = ()=>{ sheetState.type="TON"; renderSheet(); };
+
+        $("sheetNext").onclick = ()=>{
+          const code = sanitizeCode($("promoCodeInput").value);
+          const uses = Math.max(1, parseInt($("promoUsesInput").value || "1",10));
+          const amt  = Math.max(1, parseInt($("promoAmountInput").value || "1",10));
+
+          if (code.length < 5){
+            haptic("light");
+            showToast(T("short"), 2400);
+            return;
+          }
+
+          sheetState.code = code;
+          sheetState.maxUses = uses;
+          sheetState.amount = amt;
+          sheetState.step = 2;
+          renderSheet();
+        };
+
+      } else {
+        title.textContent = T("reward");
+        body.innerHTML = `
+          <div class="card" style="padding:12px;background:rgba(255,255,255,.06);">
             <div class="row">
-              <div class="left">
-                <div class="ttl">${T("admin")}</div>
-                <div class="sub">${T("adminHint")}</div>
-              </div>
-              <button class="btn ${state.isOwner ? "primary" : ""}" id="openAdmin">
-                ${state.isOwner ? "Open" : "Locked"}
-              </button>
+              <div style="font-weight:900;letter-spacing:.2px;">${sheetState.code}</div>
+              <div class="chip">${sheetState.type} • ${sheetState.amount}</div>
             </div>
-            <div class="hint" style="margin-top:8px;">${T("noteOwner")}</div>
+            <div class="mini" style="margin-top:8px;">
+              ${state.lang==="ru" ? "Активации" : "Uses"}: <b style="color:var(--text)">${sheetState.maxUses}</b>
+            </div>
           </div>
 
           <div class="hint">
-            Идеи для админки (потом сделаем): мут/таймаут, выдача роли, просмотр логов,
-            рассылка, сброс прогресса, управление промокодами, лимиты на вывод.
-          </div>
-        </div>
-      `;
-
-      document.getElementById("langRu").onclick = ()=>{ haptic(); setLang("ru"); };
-      document.getElementById("langEn").onclick = ()=>{ haptic(); setLang("en"); };
-      document.getElementById("themeDark").onclick = ()=>{ haptic(); setTheme("dark"); renderAll(); };
-      document.getElementById("themeLight").onclick = ()=>{ haptic(); setTheme("light"); renderAll(); };
-
-      document.getElementById("openAdmin").onclick = ()=>{
-        haptic("medium");
-        if (!state.isOwner){
-          showDialog(T("soon"));
-          return;
-        }
-        openAdminSheet();
-      };
-    }
-
-    function openAdminSheet(){
-      showSheet(T("admin"), [
-        { label: "🔎 " + T("find"), onClick: openAdminUserLookup },
-        { label: "📢 Broadcast (soon)", onClick: ()=>showDialog(T("soon")) },
-        { label: "🎟 Promo manager (soon)", onClick: ()=>showDialog(T("soon")) },
-      ]);
-    }
-
-    function openAdminUserLookup(){
-      overlay.innerHTML = `
-        <div class="sheet" role="dialog" aria-modal="true">
-          <div class="sheet-head">
-            <div class="sheet-title">${T("admin")}</div>
-            <button class="sheet-close" id="sheetClose">✕</button>
-          </div>
-          <div class="sheet-body">
-            <div class="hint">${T("searchId")}</div>
-            <div class="field">
-              <input id="adminPid" placeholder="123456" inputmode="numeric" />
-              <button class="btn primary" id="adminFind">${T("find")}</button>
-            </div>
-            <div id="adminResult" style="margin-top:10px;"></div>
-          </div>
-        </div>
-      `;
-      overlay.classList.add("show");
-      overlay.onclick = (e)=>{ if (e.target === overlay) closeOverlay(); };
-      document.getElementById("sheetClose").onclick = closeOverlay;
-
-      document.getElementById("adminFind").onclick = ()=>{
-        const pid = (document.getElementById("adminPid").value || "").trim();
-        if (!/^\d{6}$/.test(pid)) {
-          showDialog("Введите 6 цифр");
-          return;
-        }
-
-        // Муляж карточки пользователя (потом заменим на реальные данные с сервера)
-        const html = `
-          <div class="card">
-            <div class="label">User</div>
-            <div class="big">Player ID: ${pid}</div>
-            <div class="hint">Ник/аватар/баланс — позже подтянем из базы.</div>
-            <div style="height:10px"></div>
-            <div class="grid2">
-              <button class="btn" id="giveMod">${T("giveMod")}</button>
-              <button class="btn danger" id="ban">${T("ban")}</button>
-            </div>
-            <div style="height:10px"></div>
-            <div class="grid2">
-              <button class="btn" id="addBal">${T("addBal")}</button>
-              <button class="btn" id="subBal">${T("subBal")}</button>
-            </div>
-            <div style="height:10px"></div>
-            <button class="btn" id="resetRefs">${T("resetRefs")}</button>
+            ${state.lang==="ru"
+              ? "Нажмите OK, чтобы сохранить промо. Шторку можно закрыть свайпом вниз."
+              : "Press OK to save. You can dismiss by dragging down."
+            }
           </div>
         `;
-        document.getElementById("adminResult").innerHTML = html;
 
-        document.getElementById("giveMod").onclick = ()=>showDialog(T("soon"));
-        document.getElementById("ban").onclick = ()=>showDialog(T("soon"));
-        document.getElementById("addBal").onclick = ()=>showDialog(T("soon"));
-        document.getElementById("subBal").onclick = ()=>showDialog(T("soon"));
-        document.getElementById("resetRefs").onclick = ()=>showDialog(T("soon"));
+        $("sheetOk").onclick = ()=>{ savePromoFromSheet(); };
+        // also allow OK from header
+      }
+
+      // header OK behavior
+      $("sheetOk").onclick = ()=>{
+        if (sheetState.step === 2) savePromoFromSheet();
+        else showToast(T("tech"), 2000);
       };
+
+      wireSheetDrag();
     }
 
-    function renderPage(){
-      if (state.tab === "home") renderHome();
-      if (state.tab === "profile") renderProfile();
-      if (state.tab === "settings") renderSettings();
-      setActiveNav();
-    }
-
-    function renderNavText(){
-      document.getElementById("navHomeTxt").textContent = T("home");
-      document.getElementById("navProfileTxt").textContent = T("profile");
-      document.getElementById("navSettingsTxt").textContent = T("settings");
-    }
-
-    function renderAll(){
-      setTheme(state.theme);
-      renderTop();
-      renderNavText();
-      renderPage();
-    }
-
-    // ====== EVENTS ======
-    document.getElementById("navHome").onclick = ()=>{ haptic(); state.tab="home"; renderPage(); };
-    document.getElementById("navProfile").onclick = ()=>{ haptic(); state.tab="profile"; renderPage(); };
-    document.getElementById("navSettings").onclick = ()=>{ haptic(); state.tab="settings"; renderPage(); };
-
-    document.getElementById("chipCrypto").onclick = ()=>{
+    function savePromoFromSheet(){
+      const list = getPromos();
+      const exists = list.some(p=>p.code === sheetState.code);
+      if (exists){
+        showToast(state.lang==="ru" ? "Код уже существует" : "Code already exists", 2400);
+        return;
+      }
+      list.push({
+        code: sheetState.code,
+        type: sheetState.type,
+        amount: sheetState.amount,
+        maxUses: sheetState.maxUses,
+        uses: 0
+      });
+      setPromos(list);
       haptic("light");
-      showSheet(T("balance"), [
-        { label: "➕ Привязать крипто-кошелёк", onClick: ()=>showDialog(T("soon")) },
-        { label: "📤 Перевести по адресу", onClick: ()=>showDialog(T("soon")) },
-        { label: "📥 Пополнить", onClick: ()=>showDialog(T("soon")) },
-      ]);
-    };
+      showToast(T("created"), 2400);
+      closeSheet();
+      renderAdmin();
+    }
 
-    document.getElementById("chipStars").onclick = ()=>{
-      haptic("light");
-      showSheet(T("stars"), [
-        { label: "➕ Buy Stars", onClick: ()=>showDialog(T("soon")) },
-        { label: "📥 Add Stars", onClick: ()=>showDialog(T("soon")) },
-      ]);
-    };
+    // drag-to-dismiss sheet
+    let drag = { active:false, startY:0, curY:0 };
+    function wireSheetDrag(){
+      const grab = $("grab");
+      const inner = $("sheetInner");
+      if (!grab || !inner) return;
 
-    // ====== INIT ======
-    (function init(){
-      // если открыто в Telegram — используем tg api
-      if (tg) {
-        tg.ready();
-        tg.expand();
-        try { tg.setHeaderColor("secondary_bg_color"); } catch(e){}
-        loadUserFromTG();
-      } else {
-        loadUserFromLS();
+      const onDown = (y)=>{
+        drag.active=true;
+        drag.startY=y;
+        drag.curY=y;
+        inner.style.transition="none";
+      };
+      const onMove = (y)=>{
+        if(!drag.active) return;
+        drag.curY=y;
+        const dy = Math.max(0, y - drag.startY);
+        inner.style.transform = `translateY(${dy}px)`;
+        inner.style.opacity = String(Math.max(.25, 1 - dy/220));
+      };
+      const onUp = ()=>{
+        if(!drag.active) return;
+        drag.active=false;
+        const dy = Math.max(0, drag.curY - drag.startY);
+        inner.style.transition="";
+        if (dy > 110){
+          closeSheet();
+          inner.style.transform="";
+          inner.style.opacity="";
+        } else {
+          inner.style.transform="";
+          inner.style.opacity="";
+        }
+      };
+
+      grab.onmousedown = (e)=> onDown(e.clientY);
+      window.onmousemove = (e)=> onMove(e.clientY);
+      window.onmouseup = ()=> onUp();
+
+      grab.ontouchstart = (e)=> onDown(e.touches[0].clientY);
+      window.ontouchmove = (e)=> onMove(e.touches[0].clientY);
+      window.ontouchend = ()=> onUp();
+    }
+
+    // ========= PAGE WIRING =========
+    function wirePage(){
+      // common: top pills click => toast 3 sec
+      $("balancePill").onclick = ()=>{ haptic("light"); showToast(T("tech"), 3000); };
+      $("starsPill").onclick   = ()=>{ haptic("light"); showToast(T("tech"), 3000); };
+
+      // profile promo
+      const promoToggle = $("promoToggle");
+      if (promoToggle){
+        promoToggle.onclick = ()=>{
+          haptic("light");
+          const pane = $("promoPane");
+          pane.classList.toggle("open");
+        };
+      }
+      const promoApply = $("promoApply");
+      if (promoApply){
+        promoApply.onclick = ()=> {
+          haptic("light");
+          const raw = $("promoInput").value;
+          const code = sanitizeCode(raw);
+
+          if (code.length < 5){
+            showToast(T("short"), 2400);
+            return;
+          }
+
+          const list = getPromos();
+          const p = list.find(x=>x.code === code);
+          if (!p){
+            showToast(T("invalid"), 2400);
+            return;
+          }
+          if ((p.uses || 0) >= p.maxUses){
+            showToast(state.lang==="ru" ? "Лимит исчерпан" : "Limit reached", 2400);
+            return;
+          }
+
+          // apply
+          p.uses = (p.uses || 0) + 1;
+          if (p.type === "Stars"){
+            state.balances.stars += Number(p.amount || 0);
+          } else {
+            state.balances.ton += Number(p.amount || 0);
+          }
+          setPromos(list);
+          render(); // refresh balances
+          showToast(state.lang==="ru" ? "Начислено" : "Added", 2400);
+        };
+      }
+      const promoReset = $("promoReset");
+      if (promoReset){
+        promoReset.onclick = ()=>{ haptic("light"); $("promoInput").value=""; };
       }
 
+      // settings buttons
+      const td = $("themeDark");
+      const tl = $("themeLight");
+      if (td) td.onclick = ()=>{ haptic("light"); setTheme("dark"); };
+      if (tl) tl.onclick = ()=>{ haptic("light"); setTheme("light"); };
+
+      const lr = $("langRu");
+      const le = $("langEn");
+      if (lr) lr.onclick = ()=>{ haptic("light"); setLang("ru"); };
+      if (le) le.onclick = ()=>{ haptic("light"); setLang("en"); };
+
+      const adminOpen = $("adminOpen");
+      if (adminOpen){
+        adminOpen.onclick = ()=>{
+          if (!state.isOwner) return;
+          haptic("light");
+          openAdmin();
+        };
+      }
+    }
+
+    // ========= NAV WIRING =========
+    $("navHome").onclick = ()=>{ haptic("light"); navSetActive("home"); };
+    $("navProfile").onclick = ()=>{ haptic("light"); navSetActive("profile"); };
+    $("navSettings").onclick = ()=>{ haptic("light"); navSetActive("settings"); };
+
+    $("adminBack").onclick = ()=>{ haptic("light"); closeAdmin(); };
+    $("adminOverlay").onclick = (e)=>{
+      // click outside closes
+      if (e.target === $("adminOverlay")) closeAdmin();
+    };
+
+    // ========= ESCAPE =========
+    function escapeHtml(str){
+      return (str || "").replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
+    }
+    function escapeAttr(str){
+      return escapeHtml(str).replace(/"/g,"&quot;");
+    }
+
+    // ========= INIT =========
+    function init(){
+      loadUser();
       ensurePlayerId();
+      // default theme already stored; if empty keep dark
+      document.body.setAttribute("data-theme", state.theme);
+      render();
+    }
 
-      // если язык в TG en — по умолчанию EN (если ещё не выбран)
-      if (!localStorage.getItem(LS.lang) && state.user?.tg_id && tg?.initDataUnsafe?.user?.language_code?.startsWith("en")) {
-        state.lang = "en";
-        localStorage.setItem(LS.lang, "en");
-      }
-
-      renderAll();
-    })();
+    init();
   </script>
 </body>
 </html>
-
